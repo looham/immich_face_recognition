@@ -56,17 +56,14 @@
 1. 克隆仓库并进入项目目录：
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/looham/immich_face_recognition.git
 cd immich_face_recognition
 ```
 
-2. 创建 `.env` 文件，按需填写环境变量（参见下方[配置](#配置)）：
+2. 复制环境变量模板并按需修改（参见 `.env.example` 与下方[配置](#配置)）：
 
 ```bash
-FACE_RECOGNITION_PORT=3080
-IMMICH_MACHINE_LEARNING=http://127.0.0.1:3003
-ML_MODEL_NAME=antelopev2
-PG_DSN=host=127.0.0.1 port=5432 user=postgres password=postgres dbname=immich sslmode=disable
+cp .env.example .env
 ```
 
 3. 启动服务：
@@ -231,7 +228,9 @@ curl -X POST http://localhost:3080/api/recognize \
 immich_face_recognition/
 ├── Dockerfile              # 多阶段构建镜像
 ├── docker-compose.yml      # Compose 编排
+├── .env.example            # 环境变量模板
 ├── start.sh                # 容器入口脚本
+├── LICENSE
 ├── README.md
 └── face_recognition/
     ├── main.go             # 服务主程序
@@ -275,7 +274,7 @@ const h = (face.boundingBoxY2 - face.boundingBoxY1) * scaleY;
 
 ## 许可证
 
-请在仓库根目录添加 `LICENSE` 文件并在此处注明许可证类型（如 MIT、Apache-2.0 等）。当前仓库尚未包含许可证文件，开源发布前请补充。
+本项目采用 [MIT License](LICENSE) 开源。
 
 ## 贡献
 
