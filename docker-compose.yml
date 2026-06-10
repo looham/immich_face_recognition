@@ -1,0 +1,20 @@
+services:
+  face_recognition:
+    container_name: go_script_face_recognition
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "${FACE_RECOGNITION_PORT}:${FACE_RECOGNITION_PORT}"
+    environment:
+      FACE_RECOGNITION_PORT: ${FACE_RECOGNITION_PORT}
+      IMMICH_MACHINE_LEARNING: ${IMMICH_MACHINE_LEARNING}
+      ML_MODEL_NAME: ${ML_MODEL_NAME:-antelopev2}
+      PG_DSN: ${PG_DSN}
+    volumes:
+      # 持久化应用日志
+      - ./face_recognition/logs:/app/logs
+    # 若 ML / Postgres 跑在宿主机，Windows/macOS 可取消下行注释以使用 host.docker.internal
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"

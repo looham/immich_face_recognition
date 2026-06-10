@@ -1,0 +1,10 @@
+.git
+.gitignore
+*.md
+face_recognition
+logs/
+*.log
+.env
+.env.*
+Dockerfile
+.dockerignore
