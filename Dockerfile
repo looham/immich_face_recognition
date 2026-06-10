@@ -16,7 +16,7 @@ WORKDIR /build/face_recognition
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o face_recognition .
 
-# 构建 
+# 构建 ...
 
 # ---------- 运行阶段 ----------
 FROM alpine:3.20
@@ -31,7 +31,7 @@ RUN mkdir -p /app/logs
 COPY --from=builder /build/face_recognition/face_recognition .
 COPY --from=builder /build/face_recognition/templates ./templates/
 
-# 复制
+# 复制 ...
 
 COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
