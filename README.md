@@ -1,6 +1,12 @@
 # Immich Face Recognition
 
-
+<p align="center">
+  <img src="face_recognition/demo.jpg" alt="人脸识别演示：上传图片、检测人脸框并匹配人物信息" width="720"/>
+</p>
+<p align="center">
+  <strong>上传图片 → ML 提取特征 → pgvector 匹配 Immich 人脸库</strong><br/>
+  返回人脸坐标、人物姓名与相似度距离
+</p>
 
 **上传图片 → ML 提取特征 → pgvector 匹配 Immich 人脸库**  
 返回人脸坐标、人物姓名与相似度距离
