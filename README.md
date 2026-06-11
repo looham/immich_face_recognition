@@ -1,5 +1,10 @@
 # Immich Face Recognition
 
+
+
+**上传图片 → ML 提取特征 → pgvector 匹配 Immich 人脸库**  
+返回人脸坐标、人物姓名与相似度距离
+
 基于 [Immich](https://immich.app/) ML 服务与 PostgreSQL pgvector 的独立人脸识别微服务。上传图片即可检测人脸、提取 embedding，并与 Immich 数据库中已有的人脸向量进行余弦距离匹配，返回人脸坐标及人物信息。
 
 > **只读模式**：本服务不写入数据库，仅查询 `face_search`、`asset_face`、`person`、`asset` 等表。
@@ -42,12 +47,14 @@
 
 ## 前置要求
 
-| 依赖 | 说明 |
-|------|------|
-| [Immich](https://immich.app/) | 已部署并完成人脸索引，ML 服务可访问 |
+
+| 依赖                                                            | 说明                               |
+| ------------------------------------------------------------- | -------------------------------- |
+| [Immich](https://immich.app/)                                 | 已部署并完成人脸索引，ML 服务可访问              |
 | PostgreSQL + [pgvector](https://github.com/pgvector/pgvector) | 使用 Immich 同一数据库，需已启用 pgvector 扩展 |
-| Go 1.25+ | 仅本地开发编译时需要 |
-| Docker & Docker Compose | 容器化部署时需要 |
+| Go 1.25+                                                      | 仅本地开发编译时需要                       |
+| Docker & Docker Compose                                       | 容器化部署时需要                         |
+
 
 ## 快速开始
 
@@ -60,19 +67,19 @@ git clone https://github.com/looham/immich_face_recognition.git
 cd immich_face_recognition
 ```
 
-2. 复制环境变量模板并按需修改（参见 `.env.example` 与下方[配置](#配置)）：
+1. 复制环境变量模板并按需修改（参见 `.env.example` 与下方[配置](#配置)）：
 
 ```bash
 cp .env.example .env
 ```
 
-3. 启动服务：
+1. 启动服务：
 
 ```bash
 docker compose up -d --build
 ```
 
-4. 打开浏览器访问 `http://localhost:3080`（端口以 `FACE_RECOGNITION_PORT` 为准）。
+1. 打开浏览器访问 `http://localhost:3080`（端口以 `FACE_RECOGNITION_PORT` 为准）。
 
 > 若 Immich ML 或 PostgreSQL 运行在宿主机，而本服务在 Docker 容器内，可将地址改为 `host.docker.internal`（Windows / macOS），或在 `docker-compose.yml` 中取消 `extra_hosts` 注释。
 
@@ -95,23 +102,27 @@ go build -o face_recognition .
 
 ### 环境变量
 
-| 环境变量 | 默认值 | 说明 |
-|---------|--------|------|
-| `FACE_RECOGNITION_PORT` | `3080` | HTTP 服务监听端口 |
-| `IMMICH_MACHINE_LEARNING` | `http://127.0.0.1:3003` | Immich ML 服务地址 |
-| `ML_MODEL_NAME` | `antelopev2` | 人脸识别模型名称 |
-| `PG_DSN` | `host=127.0.0.1 port=5432 user=postgres password=postgres dbname=immich sslmode=disable` | PostgreSQL 连接串（需 pgvector 扩展） |
+
+| 环境变量                      | 默认值                                                                                      | 说明                            |
+| ------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------- |
+| `FACE_RECOGNITION_PORT`   | `3080`                                                                                   | HTTP 服务监听端口                   |
+| `IMMICH_MACHINE_LEARNING` | `http://127.0.0.1:3003`                                                                  | Immich ML 服务地址                |
+| `ML_MODEL_NAME`           | `antelopev2`                                                                             | 人脸识别模型名称                      |
+| `PG_DSN`                  | `host=127.0.0.1 port=5432 user=postgres password=postgres dbname=immich sslmode=disable` | PostgreSQL 连接串（需 pgvector 扩展） |
+
 
 ### 内部参数
 
 以下参数在代码中固定，与 Immich 管理后台人脸识别配置保持一致：
 
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| `mlMinScore` | `0.7` | 人脸检测最低置信度 |
-| `faceMinFaces` | `3` | 最少匹配人脸数（minFaces） |
-| `faceMaxDist` | `0.7` | 余弦距离阈值（maxDistance） |
-| `maxImageSize` | `640` | 发送至 ML 的图片最大边长（px） |
+
+| 参数             | 值     | 说明                  |
+| -------------- | ----- | ------------------- |
+| `mlMinScore`   | `0.7` | 人脸检测最低置信度           |
+| `faceMinFaces` | `3`   | 最少匹配人脸数（minFaces）   |
+| `faceMaxDist`  | `0.7` | 余弦距离阈值（maxDistance） |
+| `maxImageSize` | `640` | 发送至 ML 的图片最大边长（px）  |
+
 
 ## API
 
@@ -171,10 +182,12 @@ go build -o face_recognition .
 
 错误响应：
 
-| 状态码 | 说明 | 示例 |
-|--------|------|------|
-| `400` | 请求参数错误 | `{ "error": "请上传图片文件" }` |
+
+| 状态码   | 说明     | 示例                             |
+| ----- | ------ | ------------------------------ |
+| `400` | 请求参数错误 | `{ "error": "请上传图片文件" }`       |
 | `500` | 服务内部错误 | `{ "error": "ML人脸检测失败: ..." }` |
+
 
 ### `GET /`
 
@@ -200,27 +213,31 @@ curl -X POST http://localhost:3080/api/recognize \
 
 ### FaceResult
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `boundingBoxX1` | int | 人脸框左上角 X 坐标（原图像素） |
-| `boundingBoxY1` | int | 人脸框左上角 Y 坐标（原图像素） |
-| `boundingBoxX2` | int | 人脸框右下角 X 坐标（原图像素） |
-| `boundingBoxY2` | int | 人脸框右下角 Y 坐标（原图像素） |
-| `imageWidth` | int | 原图宽度（像素） |
-| `imageHeight` | int | 原图高度（像素） |
-| `score` | float64 | 人脸检测置信度 |
-| `personId` | string | 匹配到的人物 ID，未匹配时省略 |
-| `personName` | string | 匹配到的人物名称，未匹配时省略 |
-| `distance` | float64 | pgvector 余弦距离，供调试 |
+
+| 字段              | 类型      | 说明                |
+| --------------- | ------- | ----------------- |
+| `boundingBoxX1` | int     | 人脸框左上角 X 坐标（原图像素） |
+| `boundingBoxY1` | int     | 人脸框左上角 Y 坐标（原图像素） |
+| `boundingBoxX2` | int     | 人脸框右下角 X 坐标（原图像素） |
+| `boundingBoxY2` | int     | 人脸框右下角 Y 坐标（原图像素） |
+| `imageWidth`    | int     | 原图宽度（像素）          |
+| `imageHeight`   | int     | 原图高度（像素）          |
+| `score`         | float64 | 人脸检测置信度           |
+| `personId`      | string  | 匹配到的人物 ID，未匹配时省略  |
+| `personName`    | string  | 匹配到的人物名称，未匹配时省略   |
+| `distance`      | float64 | pgvector 余弦距离，供调试 |
+
 
 ### 依赖的数据库表
 
-| 表 | 用途 |
-|----|------|
+
+| 表             | 用途                                |
+| ------------- | --------------------------------- |
 | `face_search` | 存储 embedding 向量（pgvector），用于相似度搜索 |
-| `asset_face` | 存储人脸记录（boundingBox + personId） |
-| `person` | 存储人物信息（name 等） |
-| `asset` | 存储图片资产，用于过滤已删除的记录 |
+| `asset_face`  | 存储人脸记录（boundingBox + personId）    |
+| `person`      | 存储人物信息（name 等）                    |
+| `asset`       | 存储图片资产，用于过滤已删除的记录                 |
+
 
 ## 项目结构
 
@@ -283,3 +300,4 @@ const h = (face.boundingBoxY2 - face.boundingBoxY1) * scaleY;
 1. 代码可在本地或 Docker 环境中正常构建运行
 2. 不引入硬编码的内网地址或敏感凭据
 3. 变更说明清晰，便于审查
+
