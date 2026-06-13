@@ -309,12 +309,12 @@ func matchPerson(embedding string) (*string, *string, *float64) {
 // ==================== Gin 路由 ====================
 
 type recognizeJSONRequest struct {
-	Base64   string `json:"base64"`
+	Image    string `json:"image"`
 	FileName string `json:"fileName,omitempty"`
 }
 
 func readRecognizeImageFromForm(c *gin.Context) ([]byte, string, error) {
-	file, header, err := c.Request.FormFile("file")
+	file, header, err := c.Request.FormFile("image")
 	if err != nil {
 		return nil, "", fmt.Errorf("请上传图片文件")
 	}
@@ -332,11 +332,11 @@ func readRecognizeImageFromJSON(c *gin.Context) ([]byte, string, error) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		return nil, "", fmt.Errorf("JSON 解析失败")
 	}
-	if req.Base64 == "" {
-		return nil, "", fmt.Errorf("请提供 base64 字段")
+	if req.Image == "" {
+		return nil, "", fmt.Errorf("请提供 image 字段")
 	}
 
-	b64 := strings.TrimSpace(req.Base64)
+	b64 := strings.TrimSpace(req.Image)
 	if comma := strings.Index(b64, ","); comma != -1 && strings.HasPrefix(b64, "data:") {
 		b64 = b64[comma+1:]
 	}
