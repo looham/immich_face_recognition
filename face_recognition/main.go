@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -12,6 +13,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -306,17 +308,67 @@ func matchPerson(embedding string) (*string, *string, *float64) {
 
 // ==================== Gin 路由 ====================
 
-func handleRecognize(c *gin.Context) {
-	file, header, err := c.Request.FormFile("image")
+type recognizeJSONRequest struct {
+	Base64   string `json:"base64"`
+	FileName string `json:"fileName,omitempty"`
+}
+
+func readRecognizeImageFromForm(c *gin.Context) ([]byte, string, error) {
+	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请上传图片文件"})
-		return
+		return nil, "", fmt.Errorf("请上传图片文件")
 	}
 	defer file.Close()
 
 	fileData, err := io.ReadAll(file)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文件失败"})
+		return nil, "", fmt.Errorf("读取文件失败")
+	}
+	return fileData, header.Filename, nil
+}
+
+func readRecognizeImageFromJSON(c *gin.Context) ([]byte, string, error) {
+	var req recognizeJSONRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		return nil, "", fmt.Errorf("JSON 解析失败")
+	}
+	if req.Base64 == "" {
+		return nil, "", fmt.Errorf("请提供 base64 字段")
+	}
+
+	b64 := strings.TrimSpace(req.Base64)
+	if comma := strings.Index(b64, ","); comma != -1 && strings.HasPrefix(b64, "data:") {
+		b64 = b64[comma+1:]
+	}
+
+	fileData, err := base64.StdEncoding.DecodeString(b64)
+	if err != nil {
+		return nil, "", fmt.Errorf("base64 解码失败")
+	}
+
+	fileName := req.FileName
+	if fileName == "" {
+		fileName = "image.jpg"
+	}
+	return fileData, fileName, nil
+}
+
+func readRecognizeImage(c *gin.Context) ([]byte, string, error) {
+	contentType := c.GetHeader("Content-Type")
+	if strings.HasPrefix(contentType, "application/json") {
+		return readRecognizeImageFromJSON(c)
+	}
+	return readRecognizeImageFromForm(c)
+}
+
+func handleRecognize(c *gin.Context) {
+	fileData, fileName, err := readRecognizeImage(c)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err.Error() == "读取文件失败" {
+			status = http.StatusInternalServerError
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -365,7 +417,7 @@ func handleRecognize(c *gin.Context) {
 	dedupPersonMatches(faces)
 
 	c.JSON(http.StatusOK, gin.H{
-		"fileName":   header.Filename,
+		"fileName":   fileName,
 		"totalFaces": len(faces),
 		"faces":      faces,
 	})

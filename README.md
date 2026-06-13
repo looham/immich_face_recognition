@@ -138,8 +138,23 @@ go build -o face_recognition .
 
 **请求**
 
-- Content-Type: `multipart/form-data`
-- 字段: `image` — 图片文件（JPG / PNG）
+支持两种 Content-Type：
+
+**方式一：`multipart/form-data`**
+
+- 字段: `file` — 图片文件（JPG / PNG）
+
+**方式二：`application/json`**
+
+```json
+{
+  "base64": "<base64 编码的图片内容>",
+  "fileName": "photo.jpg"
+}
+```
+
+- `base64`（必填）：图片的 Base64 字符串，支持纯 Base64 或 `data:image/jpeg;base64,...` 格式
+- `fileName`（可选）：返回结果中的文件名，默认 `image.jpg`
 
 **响应示例**
 
@@ -202,8 +217,14 @@ go build -o face_recognition .
 **curl 示例**
 
 ```bash
+# multipart/form-data
 curl -X POST http://localhost:3080/api/recognize \
-  -F "image=@/path/to/photo.jpg"
+  -F "file=@/path/to/photo.jpg"
+
+# application/json (base64)
+curl -X POST http://localhost:3080/api/recognize \
+  -H "Content-Type: application/json" \
+  -d "{\"base64\":\"$(base64 -w0 /path/to/photo.jpg)\",\"fileName\":\"photo.jpg\"}"
 ```
 
 ## 人脸匹配逻辑
